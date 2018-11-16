@@ -52,6 +52,14 @@ namespace Plivo.Client
                 PreAuthenticate = true,
                 UseDefaultCredentials = false
             };
+
+            WebProxy proxy = SetProxy(proxyServerSettings);
+
+            if (proxy != null)
+            {
+                httpClientHandler.Proxy = proxy;
+            }
+
             _client = new System.Net.Http.HttpClient(httpClientHandler);
             var authHeader =
                 new AuthenticationHeaderValue("Basic",
@@ -70,6 +78,31 @@ namespace Plivo.Client
                 ContractResolver = new PascalCasePropertyNamesContractResolver(),
                 NullValueHandling = NullValueHandling.Ignore
             };
+        }
+
+        private static WebProxy SetProxy(Dictionary<string, string> proxyServerSettings)
+        {
+            WebProxy proxy = null;
+
+            if (proxyServerSettings["Address"] == null || proxyServerSettings["Port"] == null) return null;
+
+            proxy = new WebProxy($"{proxyServerSettings["Address"]}:{proxyServerSettings["Port"]}")
+            {
+                Credentials = null
+            };
+
+            if (proxyServerSettings["Username"] != null && proxyServerSettings["Password"] != null)
+            {
+                proxy.Credentials =
+                    new NetworkCredential(proxyServerSettings["Username"], proxyServerSettings["Password"]);
+            }
+            else
+            {
+                proxy.UseDefaultCredentials = true;
+            }
+
+            return proxy;
+
         }
 
         /// <summary>
